@@ -1,0 +1,8 @@
+streamlit
+fastapi
+uvicorn
+pymupdf
+pandas
+python-dotenv
+requests
+python-docx

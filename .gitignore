@@ -1,0 +1,6 @@
+.env
+ai_grade_hr_resume_engine_venv/
+temp/
+.vscode/
+__pycache__/
+*.pyc

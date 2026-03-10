@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 import json
 from dotenv import load_dotenv
@@ -57,6 +58,18 @@ Resume:
         "response_format": {"type": "json_object"}
     }
 
-    response = requests.post(url, headers=headers, json=payload)
+    for attempt in range(3):
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            if response.status_code == 429:
+                wait = 2 ** attempt  # 1s, 2s, 4s
+                time.sleep(wait)
+                continue
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.Timeout:
+            return {"error": {"message": "Request timed out after 30 seconds"}}
+        except requests.exceptions.RequestException as e:
+            return {"error": {"message": str(e)}}
 
-    return response.json()
+    return {"error": {"message": "Rate limit hit after 3 retries. Try again in a moment."}}

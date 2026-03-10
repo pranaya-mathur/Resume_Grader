@@ -5,11 +5,22 @@ def compute_final_score(parsed_json, resume_text):
 
     resume_text_lower = resume_text.lower()
 
+    # Check if Groq returned an API-level error (e.g. rate limit, bad request)
+    if "error" in parsed_json:
+        err_msg = parsed_json["error"].get("message", "Unknown API error")
+        return 0, f"API Error: {err_msg[:60]}"
+
     try:
         content = parsed_json["choices"][0]["message"]["content"]
-        data = json.loads(content)
-    except:
-        return 0, "Parsing Error"
+        # Groq with response_format:json_object may return a dict or a JSON string
+        if isinstance(content, dict):
+            data = content
+        else:
+            data = json.loads(content)
+    except (KeyError, IndexError) as e:
+        return 0, f"Bad response structure: {e}"
+    except json.JSONDecodeError as e:
+        return 0, f"JSON decode error: {str(e)[:60]}"
 
     infra_stack = [x.lower() for x in data.get("infra_stack", [])]
     ml_stack = [x.lower() for x in data.get("ml_stack", [])]
